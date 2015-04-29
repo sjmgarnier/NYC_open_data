@@ -67,7 +67,7 @@ nyc_map <- spTransform(readOGR("../map/nybb.shp", layer = "nybb", verbose = FALS
 ---
 
 ## Daily collisions
-```{r, 'daily_collisions', cache=TRUE}
+```{r, 'daily_collisions', cache=TRUE, dpi=300}
 daily1 <- collisions %>%
   mutate(DATE = as.Date(DATE)) %>%
   mutate(DAY = factor(weekdays(DATE, abbreviate = TRUE), 
@@ -108,7 +108,7 @@ g
 ---
 
 ## Hourly collisions
-```{r, 'hourly_collisions', cache=TRUE}
+```{r, 'hourly_collisions', cache=TRUE, dpi=300}
 hourly1 <- collisions %>%
   mutate(HOUR = factor(as.numeric(gsub(":[0-9]+", "", TIME)))) %>%
   group_by(HOUR, DATE) %>%
@@ -142,7 +142,7 @@ g <- addBanner(g, font.size = 4, heights = c(1, 0.05 * 8 / 6),
 
 g
 ```
-<p class="caption">**Figure 1:** Figure caption.</p>
+<p class="caption">**Figure 2:** Figure caption.</p>
 
 [Back to top]("#")
 
