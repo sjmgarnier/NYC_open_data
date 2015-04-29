@@ -1,0 +1,149 @@
+---
+title: "Notebook"
+author: "Simon Garnier"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    css: custom.css
+    fig_caption: true
+    fig_width: 8
+    fig_height: 7
+    number_sections: true
+    theme: cosmo
+    toc: true
+    csl: plos.csl
+    bibliography: library.bib
+---
+
+--- 
+
+# Prepare R environment
+
+```{r, 'setup', message=FALSE}
+# Load libraries
+library(RSocrata)
+library(readr)
+library(rgdal)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(graphZoo)
+
+# Prepare color-blind friendly palette
+cbf <- brewer.pal(8, "Dark2")
+```
+
+[Back to top]("#")
+
+---
+
+# Vehicular collisions in Manhattan (2014)
+
+## Load data
+
+```{r, 'data_collisions', cache=TRUE}
+# Load collision data
+if (!file.exists("../data/collisions2014.csv")) {
+  collisions <- read.socrata("https://data.cityofnewyork.us/resource/h9gi-nx95.csv?borough=MANHATTAN&$where=date >= '2014-01-01' AND date <= '2014-12-31'")
+  write_csv(collisions, "../data/collisions2014.csv")
+} else {
+  collisions <- read_csv("../data/collisions2014.csv")
+}
+
+
+# Load map data
+if (!file.exists("../map/nybb.shp")) {
+  download.file("http://www.nyc.gov/html/dcp/download/bytes/nybb_15a.zip",
+                "../map/nybb_15a.zip")
+  unzip("../map/nybb_15a.zip", exdir = "../map/", junkpaths = TRUE)
+}
+
+nyc_map <- spTransform(readOGR("../map/nybb.shp", layer = "nybb", verbose = FALSE), 
+                       CRS("+proj=longlat +datum=WGS84"))
+```
+
+[Back to top]("#")
+
+---
+
+## Daily collisions
+```{r, 'daily_collisions', cache=TRUE}
+daily1 <- collisions %>%
+  mutate(DATE = as.Date(DATE)) %>%
+  mutate(DAY = factor(weekdays(DATE, abbreviate = TRUE), 
+                      c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))) %>%
+  group_by(DAY, DATE) %>%
+  summarize(n = length(DAY))
+
+daily2 <- daily1 %>%
+  group_by(DAY) %>%
+  summarize(mean = mean(n)) %>%
+  mutate(group = 1)
+
+g <- ggplot() +
+  geom_point(data = daily1, 
+             aes(x = DAY, y = n, color = DAY),
+             position = position_jitter(width = .25)) +
+  geom_point(data = daily2, 
+             aes(x = DAY, y = mean, group = group), 
+             size = 5) + 
+  geom_line(data = daily2, 
+             aes(x = DAY, y = mean, group = group)) + 
+  theme_graphzoo(base_size = 15) + guides(color = FALSE) +
+  scale_color_manual(values = cbf[1:7]) +
+   xlab(NULL) + ylab(NULL) 
+
+g <- addTitle(g, "Manhanttan's daily vehicular collisions rate (Jan-Dec 2014)", n.lines = 2)
+ 
+g <- addBanner(g, font.size = 4, heights = c(1, 0.05 * 8 / 6),
+               l.txt = "GRAPHZOO.TUMBLR.COM", 
+               r.txt = "SOURCE: DATA.CITYOFNEWYORK.US") 
+
+g
+```
+<p class="caption">**Figure 1:** Figure caption.</p>
+
+[Back to top]("#")
+
+---
+
+## Hourly collisions
+```{r, 'hourly_collisions', cache=TRUE}
+hourly1 <- collisions %>%
+  mutate(HOUR = factor(as.numeric(gsub(":[0-9]+", "", TIME)))) %>%
+  group_by(HOUR, DATE) %>%
+  summarize(n = length(HOUR)) 
+
+hourly2 <- hourly1 %>%
+  group_by(HOUR) %>%
+  summarize(mean = mean(n)) %>%
+  mutate(group = 1)
+
+g <- ggplot() +
+  geom_point(data = hourly1, 
+             aes(x = HOUR, y = n, color = n),
+             position = position_jitter(width = .25),
+             alpha = 0.25) +
+  geom_point(data = hourly2, 
+             aes(x = HOUR, y = mean, group = group), 
+             size = 5) + 
+  geom_line(data = hourly2, 
+             aes(x = HOUR, y = mean, group = group)) + 
+  theme_graphzoo(base_size = 15) + guides(color = FALSE) +
+  scale_color_gradient2(low = cbf[3], mid = cbf[2], high = cbf[6], midpoint = 12.5) + 
+  xlab(NULL) + ylab(NULL) +
+  scale_x_discrete(breaks = seq(0, 23, 2), labels = paste0(seq(0, 23, 2), ":00"))
+
+g <- addTitle(g, "Manhattan's hourly vehicular collision rate (Jan-Dec 2014)", n.lines = 2)
+ 
+g <- addBanner(g, font.size = 4, heights = c(1, 0.05 * 8 / 6),
+               l.txt = "GRAPHZOO.TUMBLR.COM", 
+               r.txt = "SOURCE: DATA.CITYOFNEWYORK.US")
+
+g
+```
+<p class="caption">**Figure 1:** Figure caption.</p>
+
+[Back to top]("#")
+
+---

@@ -9,3 +9,13 @@
 
 # RStudio files
 .Rproj.user/
+.Rproj.user
+notebook/notebook_cache
+tmp.R
+data/collisions2014.csv
+map/nybb.dbf
+map/nybb.prj
+map/nybb.shp
+map/nybb.shp.xml
+map/nybb.shx
+map/nybb_15a.zip
