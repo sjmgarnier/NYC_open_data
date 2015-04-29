@@ -29,6 +29,14 @@ library(ggplot2)
 library(RColorBrewer)
 library(graphZoo)
 
+# Custom functions
+capwords <- function(s, strict = FALSE) {
+    cap <- function(s) paste(toupper(substring(s, 1, 1)),
+                  {s <- substring(s, 2); if(strict) tolower(s) else s},
+                             sep = "", collapse = " " )
+    sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
+}
+
 # Prepare color-blind friendly palette
 cbf <- brewer.pal(8, "Dark2")
 ```
@@ -158,7 +166,8 @@ cross <- collisions %>%
   group_by(cross) %>%
   summarize(n = length(cross), lat = mean(LATITUDE), long = mean(LONGITUDE)) %>%
   filter(cross != " - ") %>%
-  arrange(desc(n)) 
+  arrange(desc(n)) %>%
+  mutate(cross = capwords(tolower(cross)))
 
 g <- ggplot(cross[1:50,], aes(x = reorder(factor(cross), n), y = n)) +
   geom_bar(stat = "identity", color = "white", fill = cbf[2]) + 
@@ -178,7 +187,7 @@ m <- ggplot() +
                aes(x = long, y = lat, group = group), 
                color = "grey50", size = 1, fill = "grey50") +
   geom_point(data = cross[1:50,], aes(x = long, y = lat), 
-             color = "white", size = 2) +
+             color = "white", alpha = 0.5) +
   coord_map(orientation = c(68.5, 0, 50)) + 
   theme_graphzoo() +
   theme(plot.background = element_rect(fill = rgb(0, 0, 0, 0), color = rgb(0, 0, 0, 0)),
@@ -193,20 +202,8 @@ m <- ggplot() +
 
 vp <- viewport(width = 0.6, height = 0.6, x = 0.86, y = 0.41)
 
-#Just draw the plot twice
 print(g)
 print(m, vp = vp)
-
-
-
-
-
-
-
-
-
-
-
 ```
 <p class="caption">**Figure 3:** Figure caption.</p>
 
