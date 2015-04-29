@@ -147,3 +147,69 @@ g
 [Back to top]("#")
 
 ---
+
+## Most dangerous crossings
+```{r, 'cross_collisions', cache=TRUE, dpi=300, fig.height=9, fig.width=7}
+cross <- collisions %>%
+  mutate(order = ON.STREET.NAME > CROSS.STREET.NAME) %>%
+  rowwise() %>%
+  mutate(cross = ifelse(order, paste0(ON.STREET.NAME, " - ", CROSS.STREET.NAME),
+                paste0(CROSS.STREET.NAME, " - ", ON.STREET.NAME))) %>%
+  group_by(cross) %>%
+  summarize(n = length(cross), lat = mean(LATITUDE), long = mean(LONGITUDE)) %>%
+  filter(cross != " - ") %>%
+  arrange(desc(n)) 
+
+g <- ggplot(cross[1:50,], aes(x = reorder(factor(cross), n), y = n)) +
+  geom_bar(stat = "identity", color = "white", fill = cbf[2]) + 
+  coord_flip() + 
+  theme_graphzoo(base_size = 14) + guides(color = FALSE) +
+  theme(axis.text.y = element_text(size = 8)) +
+  xlab(NULL) + ylab("Number of vehicular collisions") 
+
+g <- addTitle(g, "50 most dangerous crossings in Manhattan (Jan-Dec 2014)", n.lines = 2, font.size = 14)
+ 
+g <- addBanner(g, font.size = 3, heights = c(1, 0.05 * 6 / 9),
+               l.txt = "GRAPHZOO.TUMBLR.COM", 
+               r.txt = "SOURCE: DATA.CITYOFNEWYORK.US")
+
+m <- ggplot() + 
+  geom_polygon(data = filter(fortify(nyc_map), id == "2"), 
+               aes(x = long, y = lat, group = group), 
+               color = "grey50", size = 1, fill = "grey50") +
+  geom_point(data = cross[1:50,], aes(x = long, y = lat), 
+             color = "white", size = 2) +
+  coord_map(orientation = c(68.5, 0, 50)) + 
+  theme_graphzoo(base_size = 13, family = "Avenir Next") +
+  theme(plot.background = element_rect(fill = rgb(0, 0, 0, 0), color = rgb(0, 0, 0, 0)),
+        axis.line = element_blank(), 
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.margin = unit(c(-.02, -.13, -0.06, -.2), "snpc")) 
+
+
+vp <- viewport(width = 0.6, height = 0.6, x = 0.86, y = 0.41)
+
+#Just draw the plot twice
+print(g)
+print(m, vp = vp)
+
+
+
+
+
+
+
+
+
+
+
+```
+<p class="caption">**Figure 3:** Figure caption.</p>
+
+[Back to top]("#")
+
+---
