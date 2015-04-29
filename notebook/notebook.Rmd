@@ -167,7 +167,7 @@ g <- ggplot(cross[1:50,], aes(x = reorder(factor(cross), n), y = n)) +
   theme(axis.text.y = element_text(size = 8)) +
   xlab(NULL) + ylab("Number of vehicular collisions") 
 
-g <- addTitle(g, "50 most dangerous crossings in Manhattan (Jan-Dec 2014)", n.lines = 2, font.size = 14)
+g <- addTitle(g, "Manhattan's 50 most dangerous crossings (Jan-Dec 2014)", n.lines = 1, font.size = 15)
  
 g <- addBanner(g, font.size = 3, heights = c(1, 0.05 * 6 / 9),
                l.txt = "GRAPHZOO.TUMBLR.COM", 
@@ -180,7 +180,7 @@ m <- ggplot() +
   geom_point(data = cross[1:50,], aes(x = long, y = lat), 
              color = "white", size = 2) +
   coord_map(orientation = c(68.5, 0, 50)) + 
-  theme_graphzoo(base_size = 13, family = "Avenir Next") +
+  theme_graphzoo() +
   theme(plot.background = element_rect(fill = rgb(0, 0, 0, 0), color = rgb(0, 0, 0, 0)),
         axis.line = element_blank(), 
         axis.text = element_blank(),
