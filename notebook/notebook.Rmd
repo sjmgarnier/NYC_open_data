@@ -26,6 +26,7 @@ library(readr)
 library(rgdal)
 library(dplyr)
 library(ggplot2)
+library(mapproj)
 library(RColorBrewer)
 library(graphZoo)
 
@@ -157,7 +158,7 @@ g
 ---
 
 ## Most dangerous crossings
-```{r, 'cross_collisions', cache=TRUE, dpi=300, fig.height=9, fig.width=7}
+```{r, 'cross_collisions', cache=FALSE, dpi=300, fig.height=9, fig.width=7}
 cross <- collisions %>%
   mutate(order = ON.STREET.NAME > CROSS.STREET.NAME) %>%
   rowwise() %>%
@@ -199,13 +200,83 @@ m <- ggplot() +
         panel.grid.minor = element_blank(),
         plot.margin = unit(c(-.02, -.13, -0.06, -.2), "snpc")) 
 
-
 vp <- viewport(width = 0.6, height = 0.6, x = 0.86, y = 0.41)
-
 print(g)
-print(m, vp = vp)
+print(m, vp = vp) 
 ```
 <p class="caption">**Figure 3:** Figure caption.</p>
+
+[Back to top]("#")
+
+---
+
+## Map
+```{r, 'map', cache=FALSE, dpi=300, fig.height=8, fig.width=4}
+map <- filter(fortify(nyc_map), id == "2")
+tmp <- mapproject(map$long, map$lat, orientation = c(68.5, 0, 50))
+map <- mutate(map, long_rot = tmp$x, lat_rot = tmp$y)
+
+tmp <- mapproject(cross$long, cross$lat, orientation = c(68.5, 0, 50))
+cross <- mutate(cross, long_rot = tmp$x, lat_rot = tmp$y)
+
+g <- ggplot() + 
+  geom_polygon(data = map, 
+               aes(x = long_rot, y = lat_rot, group = group), 
+               color = "gray15", size = 1, fill = "gray15") +  
+  geom_point(data = cross, 
+             aes(x = long_rot, y = lat_rot, color = n, fill = n, size = n), 
+             alpha = 0.5) +
+  coord_fixed() +
+  scale_color_gradient("", low = "red", high = "yellow", 
+                       breaks = c(25, 50, 75, 100, 125), 
+                       labels = c(25, 50, 75, 100, 125)) +
+  scale_fill_gradient("", low = "red", high = "yellow", 
+                       breaks = c(25, 50, 75, 100, 125), 
+                       labels = c(25, 50, 75, 100, 125)) +
+  scale_size_continuous("", breaks = c(25, 50, 75, 100, 125), 
+                        labels = c(25, 50, 75, 100, 125)) +
+  guides(fill = guide_legend(nrow = 1, override.aes = list(shape = 21, alpha = 0.75)),
+         color = FALSE) +
+  theme_graphzoo(base_size = 6) +
+  theme(plot.background = element_rect(fill = rgb(0, 0, 0, 0), color = rgb(0, 0, 0, 0)),
+        legend.justification=c(1, 1), legend.position=c(1.6, 0.9), 
+        legend.key.width=unit(1, "line"),
+        axis.line = element_blank(), 
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.margin = unit(c(0, 0, -0.05, 0), "snpc"))
+
+b <- ggplot(data.frame(x = c(0, 1), y = c(0, 1)), 
+            aes(x = x, y = y)) + 
+  geom_blank() + 
+  annotate("text", x = 1, y = 0.99, 
+           label = "A year of accidents", 
+           hjust = 1, family = "Avenir Next", size = 5.5) +
+  annotate("text", x = 1, y = 0.95, 
+           label = "Locations and number of vehicular collisions\nManhattan, NYC (Jan-Dec 2014)", 
+           hjust = 1, family = "Avenir Next", size = 2.25) +
+  theme_graphzoo() +
+  theme(axis.line = element_blank(), 
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.margin = unit(c(0, 0, -0.05, 0), "snpc"))
+ 
+b <- addBanner(b, font.size = 2.5, heights = c(1, 0.05 * 4 / 8),
+               l.txt = "GRAPHZOO.TUMBLR.COM", 
+               r.txt = "SOURCE: DATA.CITYOFNEWYORK.US")
+
+
+vp <- viewport(width = 1, height = 1, x = 0.45, y = 0.52)
+print(b)
+print(g, vp = vp) 
+```
+<p class="caption">**Figure 4:** Figure caption.</p>
 
 [Back to top]("#")
 
